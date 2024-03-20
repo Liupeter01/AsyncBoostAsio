@@ -51,7 +51,9 @@ int main()
 
 										book bookdata;
 										bookdata.ParseFromArray(reply_msg, msg_length);
-										std::cout << "Replay Msg is : " << bookdata.name() << " " << bookdata.price() << " " << bookdata.pages() << "\n";
+										std::cout << "Reply Msg is : ";
+										std::cout.write(reply_msg, msg_length);
+										std::cout<< "\n";
 							  }
 					});
 					send_thread.join();
