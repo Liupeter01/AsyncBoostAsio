@@ -1,7 +1,0 @@
-syntax="proto3";
-message book
-{
-	string name = 1;
-	int32 pages = 2;
-	float price = 3;
-}
