@@ -9,6 +9,9 @@
 #include<boost/asio.hpp>
 #include<boost/uuid/uuid_generators.hpp>
 #include<boost/uuid/uuid_io.hpp>
+#include<json/json.h>
+#include<json/value.h>
+#include<json/reader.h>
 
 class AsyncServer;
 class Session;
@@ -50,6 +53,7 @@ public:
           boost::asio::ip::tcp::socket& Socket();
           std::string& GetUuid();
           void Start();
+		  void Send(std::string str);
 		  void Send(const char* msg, int max_length);
 
 private:

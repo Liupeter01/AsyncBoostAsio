@@ -25,6 +25,11 @@ void Session::Start() {
           );
 }
 
+void  Session::Send(std::string str)
+{
+          Send(str.c_str(), str.length());
+}
+
 void Session::Send(const char* msg, int max_length) {
           std::lock_guard<std::mutex> _lckg(_send_mutex);
           int send_que_size = _send_queue.size();
@@ -117,9 +122,15 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                               bytes_transferred -= data_length;
                               _recv_msg_node->_msg[_recv_msg_node->_total_length] = '\0';
 
-                              std::cout << "receive data is " << _recv_msg_node->_msg << std::endl;
+                              Json::Value root;
+                              Json::Reader reader;
+                              reader.parse(_recv_msg_node->_msg, _recv_msg_node->_msg + _recv_msg_node->_total_length, root);
+                              std::cout << "receive msg from server, id = " << root["id"].asInt()
+                                        << ", data = " << root["data"].asString() << std::endl;
 
-                              this->Send(_recv_msg_node->_msg, _recv_msg_node->_total_length);
+                              root["data"] = "server has received msg = " + root["data"].asString();
+
+                              this->Send(root.toStyledString());
 
                               _b_head_parse = false;        //continue to receive header data
                               _recv_head_node->clear();
