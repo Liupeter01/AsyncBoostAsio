@@ -26,10 +26,9 @@ public:
 		  //负责数据的写入
 		  MsgNode(const char* msg, std::size_t total_length) 
 					:_total_length(total_length + HEAD_LENGTH), _cur_length(0), _msg(new char [total_length + HEAD_LENGTH + 1] {0}) {
-					/*修改为网络字节序*/
-					int max_len_host = boost::asio::detail::socket_ops::host_to_network_short(total_length);
-					std::memcpy(_msg, &total_length, HEAD_LENGTH);
-					std::memcpy(_msg + HEAD_LENGTH, msg, max_len_host);
+					short max_len_host = boost::asio::detail::socket_ops::host_to_network_short(total_length);
+					std::memcpy(_msg, &max_len_host, HEAD_LENGTH);
+					std::memcpy(_msg + HEAD_LENGTH, msg, total_length);
 					_msg[_total_length] = '\0';
 		  }
 		  void clear() {
