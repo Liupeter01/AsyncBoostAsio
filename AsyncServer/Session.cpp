@@ -25,14 +25,20 @@ void Session::Start() {
           );
 }
 
-void Session::Send(char* msg, int max_length) {
+void Session::Send(std::string send_str)
+{
+          Send(send_str.c_str(), send_str.length());
+}
+
+void Session::Send(const char* msg, int max_length) {
           std::lock_guard<std::mutex> _lckg(_send_mutex);
-          _send_queue.emplace(std::make_shared<MsgNode>(msg, max_length));
+          int send_que_size = _send_queue.size();
           if (_send_queue.size() > MAX_SEND_QUEUE) {
                     std::cerr << "Session:" << _uuid_str << " _send_queue full!\n";
                     return;
           }
-          if (_send_queue.size() > 0) {
+          _send_queue.emplace(std::make_shared<MsgNode>(msg, max_length));
+          if (send_que_size > 0) {
                     return;
           }
 
@@ -116,9 +122,19 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                               bytes_transferred -= data_length;
                               _recv_msg_node->_msg[_recv_msg_node->_total_length] = '\0';
 
-                              std::cout << "receive data is " << _recv_msg_node->_msg << std::endl;
+                              book mybook;
+                              mybook.ParseFromArray(_recv_msg_node->_msg, _recv_msg_node->_total_length);
+                              std::cout << "receive data is : " << mybook.name() << " " << mybook.price() << " " << mybook.pages() << "\n";
 
-                              this->Send(_recv_msg_node->_msg, _recv_msg_node->_total_length);
+                              book send_book;
+                              std::string send_msg;
+                              std::string return_msg = std::string("server received msg = ") + mybook.name();
+                              send_book.set_name(return_msg.c_str());
+                              send_book.set_price(mybook.price());
+                              send_book.set_pages(mybook.pages());
+
+                              send_book.SerializeToString(&send_msg);
+                              this->Send(send_msg);
 
                               _b_head_parse = false;        //continue to receive header data
                               _recv_head_node->clear();

@@ -9,6 +9,7 @@
 #include<boost/asio.hpp>
 #include<boost/uuid/uuid_generators.hpp>
 #include<boost/uuid/uuid_io.hpp>
+#include"msg.pb.h"
 
 class AsyncServer;
 class Session;
@@ -27,9 +28,9 @@ public:
 		  MsgNode(const char* msg, std::size_t total_length) 
 					:_total_length(total_length + HEAD_LENGTH), _cur_length(0), _msg(new char [total_length + HEAD_LENGTH + 1] {0}) {
 					/*ÐÞ¸ÄÎªÍøÂç×Ö½ÚÐò*/
-					int max_len_host = boost::asio::detail::socket_ops::host_to_network_short(total_length);
-					std::memcpy(_msg, &total_length, HEAD_LENGTH);
-					std::memcpy(_msg + HEAD_LENGTH, msg, max_len_host);
+					short max_len_host = boost::asio::detail::socket_ops::host_to_network_short(total_length);
+					std::memcpy(_msg, &max_len_host, HEAD_LENGTH);
+					std::memcpy(_msg + HEAD_LENGTH, msg, total_length);
 					_msg[_total_length] = '\0';
 		  }
 		  void clear() {
@@ -51,7 +52,8 @@ public:
           boost::asio::ip::tcp::socket& Socket();
           std::string& GetUuid();
           void Start();
-		  void Send(char* msg, int max_length);
+		  void Send(std::string send_str);
+		  void Send(const char* msg, int max_length);
 
 private:
           void handle_read(std::shared_ptr<Session> _self_shared, boost::system::error_code error, std::size_t bytes_transferred);
