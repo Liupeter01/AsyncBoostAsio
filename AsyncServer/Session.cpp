@@ -25,14 +25,15 @@ void Session::Start() {
           );
 }
 
-void Session::Send(char* msg, int max_length) {
+void Session::Send(const char* msg, int max_length) {
           std::lock_guard<std::mutex> _lckg(_send_mutex);
-          _send_queue.emplace(std::make_shared<MsgNode>(msg, max_length));
+          int send_que_size = _send_queue.size();
           if (_send_queue.size() > MAX_SEND_QUEUE) {
                     std::cerr << "Session:" << _uuid_str << " _send_queue full!\n";
                     return;
           }
-          if (_send_queue.size() > 0) {
+          _send_queue.emplace(std::make_shared<MsgNode>(msg, max_length));
+          if (send_que_size > 0) {
                     return;
           }
 

@@ -50,7 +50,7 @@ public:
           boost::asio::ip::tcp::socket& Socket();
           std::string& GetUuid();
           void Start();
-		  void Send(char* msg, int max_length);
+		  void Send(const char* msg, int max_length);
 
 private:
           void handle_read(std::shared_ptr<Session> _self_shared, boost::system::error_code error, std::size_t bytes_transferred);
