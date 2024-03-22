@@ -53,7 +53,9 @@ public:
 		  void Send(const char* msg, int max_length);
 
 private:
-          void handle_read(std::shared_ptr<Session> _self_shared, boost::system::error_code error, std::size_t bytes_transferred);
+		  void handle_head(std::shared_ptr<Session> _self_shared, boost::system::error_code error, std::size_t bytes_transferred);
+          void handle_msg(std::shared_ptr<Session> _self_shared, boost::system::error_code error, std::size_t bytes_transferred);
+
           void handle_write(std::shared_ptr<Session> _self_shared, boost::system::error_code error);
 
 private:

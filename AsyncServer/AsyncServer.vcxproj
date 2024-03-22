@@ -153,13 +153,11 @@
   <ItemGroup>
     <ClInclude Include="AsyncServer.h" />
     <ClInclude Include="const.h" />
-    <ClInclude Include="msg.pb.h" />
     <ClInclude Include="Session.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncServer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="msg.pb.cc" />
     <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
