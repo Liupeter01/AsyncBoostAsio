@@ -9,4 +9,8 @@ constexpr std::size_t HEAD_DATA_LENGTH = 2;
 constexpr std::size_t HEAD_TOTAL_LENGTH = 4;
 constexpr std::size_t MAX_LENGTH = 2 * 1024;
 
+enum MESSAGE_ID {
+          MSG_EXAMPLE = 1001
+};
+
 #endif

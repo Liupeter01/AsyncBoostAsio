@@ -155,12 +155,15 @@
     <ClInclude Include="const.h" />
     <ClInclude Include="MsgNode.h" />
     <ClInclude Include="Session.h" />
+    <ClInclude Include="Singleton.hpp" />
+    <ClInclude Include="SyncLogic.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncServer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MsgNode.cpp" />
     <ClCompile Include="Session.cpp" />
+    <ClCompile Include="SyncLogic.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

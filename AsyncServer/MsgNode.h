@@ -2,9 +2,10 @@
 #ifndef _MSGNODE_H_
 #define _MSGNODE_H_
 #include"const.h"
-#include<boost/asio.hpp>
+#include<queue>
 #include<iostream>
 #include<memory>
+#include<boost/asio.hpp>
 
 struct MsgHead {
 		  MsgHead(short max_length)
@@ -24,6 +25,7 @@ struct MsgHead {
 class RecvNode :public MsgHead {
 public:
 		  RecvNode(short max_length, short msg_id);
+		  short getMsgID() const;
 private:
 		  short _msg_id;
 };
@@ -31,6 +33,7 @@ private:
 class SendNode :public MsgHead {
 public:
 		  SendNode(const char* msg, short max_length, short msg_id);
+		  short getMsgID() const;
 private:
 		  short _msg_id;
 };

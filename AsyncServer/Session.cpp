@@ -1,5 +1,13 @@
 #include "Session.h"
-#include"AsyncServer.h"
+#include "AsyncServer.h"
+#include <iostream>
+#include <sstream>
+
+#include <json/json.h>
+#include <json/value.h>
+#include <json/reader.h>
+
+#include "SyncLogic.h"
 
 Session::Session(boost::asio::io_context& ioc, AsyncServer* server)
           :_socket(ioc), _server(server), _b_head_parse(false){
@@ -133,15 +141,10 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                               bytes_transferred -= data_length;
                               _recv_msg_node->_msg[_recv_msg_node->_total_length] = '\0';
 
-                              Json::Value root;
-                              Json::Reader reader;
-                              reader.parse(_recv_msg_node->_msg, _recv_msg_node->_msg + _recv_msg_node->_total_length, root);
-                              std::cout << "receive msg from server, id = " << root["id"].asInt()
-                                        << ", data = " << root["data"].asString() << std::endl;
-
-                              root["data"] = "server has received msg = " + root["data"].asString();
-
-                              this->Send(root.toStyledString(), msg_id);
+                              /*push LogicPair to queue, and logic thread will handle it*/
+                              SyncLogic::getInstance()->commitPairToQueue(
+                                        std::make_shared<LogicPair>(shared_from_this(), _recv_msg_node)
+                              );
 
                               _b_head_parse = false;        //continue to receive header data
                               _recv_head_node->clear();
@@ -171,16 +174,11 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                               bytes_transferred -= remain_length;
                               cur_copy_length += remain_length;
                               _recv_msg_node->_msg[_recv_msg_node->_total_length] = '\0';
-                              
-                              Json::Value root;
-                              Json::Reader reader;
-                              reader.parse(_recv_msg_node->_msg, _recv_msg_node->_msg + _recv_msg_node->_total_length, root);
-                              std::cout << "receive msg from server, id = " << root["id"].asInt()
-                                        << ", data = " << root["data"].asString() << std::endl;
 
-                              root["data"] = "server has received msg = " + root["data"].asString();
-
-                              this->Send(root.toStyledString(), root["id"].asInt());
+                              /*push LogicPair to queue, and logic thread will handle it*/
+                              SyncLogic::getInstance()->commitPairToQueue(
+                                        std::make_shared<LogicPair>(shared_from_this(), _recv_msg_node)
+                              );
 
                               _b_head_parse = false;        //continue to receive header data
                               _recv_head_node->clear();

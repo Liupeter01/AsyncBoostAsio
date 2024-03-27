@@ -1,17 +1,18 @@
 #pragma once
 #ifndef  _SESSION_H_
 #define _SESSION_H_
-#include"MsgNode.h"
-#include<queue>
-#include<mutex>
-#include<boost/uuid/uuid_generators.hpp>
-#include<boost/uuid/uuid_io.hpp>
-#include<json/json.h>
-#include<json/value.h>
-#include<json/reader.h>
+
+#include <boost/asio.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <queue>
+#include <mutex>
+#include <memory>
+
+#include "const.h"
+#include "MsgNode.h"
 
 class AsyncServer;
-class Session;
 
 class Session :public std::enable_shared_from_this<Session>
 {
