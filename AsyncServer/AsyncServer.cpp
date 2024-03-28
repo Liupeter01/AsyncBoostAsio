@@ -1,4 +1,5 @@
 #include "AsyncServer.h"
+#include "IOServicePool.h"
 
 AsyncServer::AsyncServer(boost::asio::io_context& ioc, unsigned short port)
           :_ioc(ioc), _acceptor(ioc, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::any(), port)){
@@ -11,7 +12,9 @@ void AsyncServer::CloseSession(const std::string& _uuid) {
 }
 
 void AsyncServer::StartAccept(){
-          std::shared_ptr<Session> session_ptr = std::make_shared<Session>(_ioc, this);
+          /*Get io_context from IOService, IOServicePool using RR to deliver io_context instance*/
+          boost::asio::io_context& ioc_pool = IOServicePool::getInstance()->getIOService();
+          std::shared_ptr<Session> session_ptr = std::make_shared<Session>(ioc_pool, this);
           _acceptor.async_accept(session_ptr->Socket(), std::bind(&AsyncServer::HandleAccept, this, session_ptr, std::placeholders::_1));
 }
 
