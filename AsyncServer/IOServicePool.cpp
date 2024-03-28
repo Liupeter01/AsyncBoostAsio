@@ -11,7 +11,7 @@ IOServicePool::IOServicePool(std::size_t poolSize)
                     this->_uni_works[i] = std::unique_ptr<WORK>(new WORK(this->_io_contexts[i]));
           }
           /*start threads*/
-          for (std::size_t i = 0; i < this->_threads.size(); ++i) {
+          for (std::size_t i = 0; i < this->_io_contexts.size(); ++i) {
                     this->_threads.emplace_back([this, i]() {_io_contexts[i].run(); });
           }
 }
