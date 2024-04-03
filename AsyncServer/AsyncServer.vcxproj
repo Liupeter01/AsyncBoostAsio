@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="AsyncServer.h" />
     <ClInclude Include="const.h" />
+    <ClInclude Include="IOThreadPool.h" />
     <ClInclude Include="MsgNode.h" />
     <ClInclude Include="Session.h" />
     <ClInclude Include="Singleton.hpp" />
@@ -160,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncServer.cpp" />
+    <ClCompile Include="IOThreadPool.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MsgNode.cpp" />
     <ClCompile Include="Session.cpp" />

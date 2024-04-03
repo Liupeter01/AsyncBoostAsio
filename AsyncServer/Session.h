@@ -43,5 +43,7 @@ private:
 		  std::shared_ptr<RecvNode> _recv_msg_node;			//收到的消息结构
 		  std::shared_ptr<MsgHead> _recv_head_node;		//收到的头部结构
 		  bool _b_head_parse;
+
+          boost::asio::strand<boost::asio::io_context::executor_type> _strand;
 };
 #endif // ! _SESSION_H_
