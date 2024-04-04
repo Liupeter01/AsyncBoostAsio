@@ -22,7 +22,7 @@ public:
           std::string& GetUuid();
           void Start();
           void Send(std::string str, short msg_id);
-          void Send(const char* msg, int max_length, short msg_id);
+          void Send(const char* msg, std::size_t max_length, short msg_id);
 
 private:
           void handle_read(std::shared_ptr<Session> _self_shared, boost::system::error_code error, std::size_t bytes_transferred);
