@@ -13,7 +13,7 @@ int main()
 							  signal_wait.stop();
 							  ServicePool->stopServicePool();		  //shutdown all io_context
 				    });
-
+					
 					AsyncServer server(signal_wait, 10086);
 					signal_wait.run();			//excute iocp/epoll model
 		  }

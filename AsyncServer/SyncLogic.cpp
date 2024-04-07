@@ -74,7 +74,7 @@ void  SyncLogic::callBackExample(std::shared_ptr<Session>session, const short& m
           Json::Reader reader;
           reader.parse(msg, root);
 
-          std::cout << "id = " << root["id"] << ", data = " << root["data"] << std::endl;
+          std::cout << "id = " << (root["id"] = msg_id) << ", data = " << (root["data"] = msg) << std::endl;
           root["data"] = "server has received msg = " + root["data"].asString();
 
           session->Send(root.toStyledString(), root["id"].asInt());
