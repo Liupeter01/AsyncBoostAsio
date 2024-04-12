@@ -38,9 +38,9 @@ void  Session::Send(std::string str, short msg_id)
           Send(str.c_str(), str.length(), msg_id);
 }
 
-void Session::Send(const char* msg, int max_length, short msg_id) {
+void Session::Send(const char* msg, std::size_t max_length, short msg_id) {
           std::lock_guard<std::mutex> _lckg(_send_mutex);
-          int send_que_size = _send_queue.size();
+          std::size_t send_que_size = _send_queue.size();
           if (_send_queue.size() > MAX_SEND_QUEUE) {
                     std::cerr << "Session:" << _uuid_str << " _send_queue full!\n";
                     return;

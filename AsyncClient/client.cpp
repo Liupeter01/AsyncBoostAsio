@@ -33,7 +33,7 @@ int main()
 										root["data"] = "hello world";
 										std::string request = root.toStyledString();
 
-										int16_t request_length = request.length();
+										std::size_t request_length = request.length();
 										int16_t network_length = boost::asio::detail::socket_ops::host_to_network_short(request_length);
 
 										*(int16_t*)send_data = boost::asio::detail::socket_ops::host_to_network_short(1001);																	 //msg_id

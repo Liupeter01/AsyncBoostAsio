@@ -1,15 +1,21 @@
 #include"AsyncServer.h"
-#include<csignal>
+#include"IOServicePool.h"
 
 int main() 
 {
 		  try{
-					boost::asio::io_context ioc;
-					boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
-					signals.async_wait([&ioc](auto, auto) { ioc.stop();});
+					auto ServicePool = IOServicePool::getInstance();
 
-					AsyncServer server(ioc, 10086);
-					ioc.run();			//excute iocp/epoll model
+					/*deal with user's interrupt(SIGINT, SIGTERM)*/
+					boost::asio::io_context signal_wait;
+					boost::asio::signal_set signals(signal_wait, SIGINT, SIGTERM);
+					signals.async_wait([&signal_wait,&ServicePool](auto, auto) { 
+							  signal_wait.stop();
+							  ServicePool->stopServicePool();		  //shutdown all io_context
+				    });
+
+					AsyncServer server(signal_wait, 10086);
+					signal_wait.run();			//excute iocp/epoll model
 		  }
 		  catch (const std::exception&e){
 					std::cerr << "Exception " << e.what();
