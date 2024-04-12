@@ -1,11 +1,19 @@
 #include "Session.h"
-#include"AsyncServer.h"
+#include "AsyncServer.h"
+#include <iostream>
+#include <sstream>
+
+#include <json/json.h>
+#include <json/value.h>
+#include <json/reader.h>
+
+#include "SyncLogic.h"
 
 Session::Session(boost::asio::io_context& ioc, AsyncServer* server)
           :_socket(ioc), _server(server), _b_head_parse(false){
           boost::uuids::uuid uuid = boost::uuids::random_generator()();
           _uuid_str = boost::uuids::to_string(uuid);
-          _recv_head_node = std::make_shared<MsgNode>(HEAD_LENGTH);
+          _recv_head_node = std::make_shared<MsgHead>(HEAD_TOTAL_LENGTH);
 }
 
 std::string & Session::GetUuid()
@@ -20,24 +28,24 @@ boost::asio::ip::tcp::socket& Session::Socket()
 
 void Session::Start() {
           std::memset(_data, 0, MAX_LENGTH);
-          _socket.async_read_some(boost::asio::buffer(_data, max_length),
+          _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
                     std::bind(&Session::handle_read, this, shared_from_this(), std::placeholders::_1, std::placeholders::_2)
           );
 }
 
-void  Session::Send(std::string str)
+void  Session::Send(std::string str, short msg_id)
 {
-          Send(str.c_str(), str.length());
+          Send(str.c_str(), str.length(), msg_id);
 }
 
-void Session::Send(const char* msg, int max_length) {
+void Session::Send(const char* msg, int max_length, short msg_id) {
           std::lock_guard<std::mutex> _lckg(_send_mutex);
           int send_que_size = _send_queue.size();
           if (_send_queue.size() > MAX_SEND_QUEUE) {
                     std::cerr << "Session:" << _uuid_str << " _send_queue full!\n";
                     return;
           }
-          _send_queue.emplace(std::make_shared<MsgNode>(msg, max_length));
+          _send_queue.emplace(std::make_shared<SendNode>(msg, max_length, msg_id));
           if (send_que_size > 0) {
                     return;
           }
@@ -71,7 +79,7 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                     /*head is not parsed!*/
                     if (!_b_head_parse) {
                               /*size is even less than the HEAD_LENGTH*/
-                              if (bytes_transferred + _recv_head_node->_cur_length < HEAD_LENGTH) {
+                              if (bytes_transferred + _recv_head_node->_cur_length < HEAD_TOTAL_LENGTH) {
                                         std::memcpy(_recv_head_node->_msg + _recv_head_node->_cur_length, _data + cur_copy_length, bytes_transferred);
                                         _recv_head_node->_cur_length += bytes_transferred;
                                         memset(_data, 0, MAX_LENGTH);
@@ -80,14 +88,25 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                                         return;
                               }
 
-                              int remain_space = HEAD_LENGTH - _recv_head_node->_cur_length;        //get remain space
+                              int remain_space = HEAD_TOTAL_LENGTH - _recv_head_node->_cur_length;        //get remain space
                               std::memcpy(_recv_head_node->_msg + _recv_head_node->_cur_length, _data + cur_copy_length, remain_space);
 
                               //update data length which is being processed and remain unprocessed length
                               cur_copy_length += remain_space;
                               bytes_transferred -= remain_space;
 
-                              int16_t data_length = boost::asio::detail::socket_ops::network_to_host_short(*((int16_t*)_recv_head_node->_msg));
+                              /*handle msg id data*/
+                              int16_t msg_id = boost::asio::detail::socket_ops::network_to_host_short(*(int16_t*)_recv_head_node->_msg);
+
+                              /*send invalid msg id*/
+                              if (msg_id > MAX_LENGTH) {
+                                        std::cerr << "Invalid Msg id!\n";
+                                        _server->CloseSession(_uuid_str);
+                                        return;
+                              }
+
+                              /*handle msg length*/
+                              int16_t data_length = boost::asio::detail::socket_ops::network_to_host_short(*(int16_t*)(_recv_head_node->_msg + HEAD_ID_LENGTH));
 
                               /*send oversize packet, terminate connection*/
                               if (data_length > MAX_LENGTH) {
@@ -100,7 +119,7 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                                         _server->CloseSession(_uuid_str);
                                         return;
                               }
-                              _recv_msg_node = std::make_shared<MsgNode>(data_length);
+                              _recv_msg_node = std::make_shared<RecvNode>(data_length, msg_id);
 
                               /*data recv is not completed! we could save particial data*/
                               if (bytes_transferred < data_length) {
@@ -122,15 +141,10 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                               bytes_transferred -= data_length;
                               _recv_msg_node->_msg[_recv_msg_node->_total_length] = '\0';
 
-                              Json::Value root;
-                              Json::Reader reader;
-                              reader.parse(_recv_msg_node->_msg, _recv_msg_node->_msg + _recv_msg_node->_total_length, root);
-                              std::cout << "receive msg from server, id = " << root["id"].asInt()
-                                        << ", data = " << root["data"].asString() << std::endl;
-
-                              root["data"] = "server has received msg = " + root["data"].asString();
-
-                              this->Send(root.toStyledString());
+                              /*push LogicPair to queue, and logic thread will handle it*/
+                              SyncLogic::getInstance()->commitPairToQueue(
+                                        std::make_shared<LogicPair>(shared_from_this(), _recv_msg_node)
+                              );
 
                               _b_head_parse = false;        //continue to receive header data
                               _recv_head_node->clear();
@@ -160,10 +174,11 @@ void Session::handle_read(std::shared_ptr<Session> _self_shared, boost::system::
                               bytes_transferred -= remain_length;
                               cur_copy_length += remain_length;
                               _recv_msg_node->_msg[_recv_msg_node->_total_length] = '\0';
-                              
-                              std::cout << "receive data is " << _recv_msg_node->_msg << std::endl;
 
-                              this->Send(_recv_msg_node->_msg, _recv_msg_node->_total_length);
+                              /*push LogicPair to queue, and logic thread will handle it*/
+                              SyncLogic::getInstance()->commitPairToQueue(
+                                        std::make_shared<LogicPair>(shared_from_this(), _recv_msg_node)
+                              );
 
                               _b_head_parse = false;        //continue to receive header data
                               _recv_head_node->clear();
