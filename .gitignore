@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/AsyncServer/AsyncServer.vcxproj
+/.gitignore
+/AsyncServer/AsyncServer.vcxproj.filters
