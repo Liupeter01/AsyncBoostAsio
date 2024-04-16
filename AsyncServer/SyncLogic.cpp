@@ -16,10 +16,11 @@ SyncLogic::~SyncLogic()
 
 void  SyncLogic::commitPairToQueue(std::shared_ptr<LogicPair> logicpair)
 {
-          std::lock_guard<std::mutex> _lckg(this->_queue_mutex);
+          std::unique_lock<std::mutex> _lckg(this->_queue_mutex);
           this->_msg_queue.push(logicpair);
 
-          if (!_msg_queue.empty()) {
+          if (!_msg_queue.size() == 1) {
+                    _lckg.unlock();     //before notify, we have to release the lock
                     _queue_cond.notify_one();
           }
 }
