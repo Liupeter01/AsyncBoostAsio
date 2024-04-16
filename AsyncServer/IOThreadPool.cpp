@@ -23,6 +23,8 @@ boost::asio::io_context& IOThreadPool::GetIOContext()
 
 void IOThreadPool::stopThreadPool()
 {
+          /*Service has to be terminated MANUALLY*/
+          _io_context.stop();
           _uni_work.reset();
           for (auto& thread : _threads) {
                     if (thread.joinable()) {
